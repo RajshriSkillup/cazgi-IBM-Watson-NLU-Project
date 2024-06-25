@@ -12,11 +12,17 @@ app.use(cors_app());
 /*Uncomment the following lines to loan the environment 
 variables that you set up in the .env file*/
 
- const dotenv = require('dotenv');
+const dotenv = require('dotenv');
 dotenv.config();
 
 const api_key = process.env.API_KEY;
 const api_url = process.env.API_URL;
+
+const https = require('https');
+
+const agent = new https.Agent({
+  rejectUnauthorized: false
+});
 
 function getNLUInstance() {
     const NaturalLanguageUnderstandingV1 = require('ibm-watson/natural-language-understanding/v1');
@@ -27,7 +33,9 @@ function getNLUInstance() {
         authenticator: new IamAuthenticator ({
             apikey: api_key
         }),
-        serviceUrl: api_url
+        serviceUrl: api_url,
+        disableSslVerification: true,
+        httpsAgent: agent
     });
     return naturalLanguageUnderstanding;
 }
@@ -51,9 +59,9 @@ app.get("/url/emotion", (req,res) => {
             }
         }
     }
-
+    
     const naturalLanguageUnderstanding = getNLUInstance();
-
+    
     naturalLanguageUnderstanding.analyze(analyzeParams)
     .then(analysisResults => {
         //Retrieve the emotion and return it as a formatted string
@@ -78,9 +86,9 @@ app.get("/url/sentiment", (req,res) => {
             }
         }
     }
-
+    
     const naturalLanguageUnderstanding = getNLUInstance();
-
+    
     naturalLanguageUnderstanding.analyze(analyzeParams)
     .then(analysisResults => {
         //Retrieve the sentiment and return it as a formatted string
@@ -91,6 +99,8 @@ app.get("/url/sentiment", (req,res) => {
         return res.send("Could not do desired operation "+err);
     });
 });
+
+
 
 //The endpoint for the webserver ending with /text/emotion
 app.get("/text/emotion", (req,res) => {
@@ -105,9 +115,9 @@ app.get("/text/emotion", (req,res) => {
             }
         }
     }
-
+    
     const naturalLanguageUnderstanding = getNLUInstance();
-
+    
     naturalLanguageUnderstanding.analyze(analyzeParams)
     .then(analysisResults => {
         //Retrieve the emotion and return it as a formatted string
@@ -118,6 +128,7 @@ app.get("/text/emotion", (req,res) => {
         return res.send("Could not do desired operation "+err);
     });
 });
+
 
 app.get("/text/sentiment", (req,res) => {
     let textToAnalyze = req.query.text
@@ -131,9 +142,9 @@ app.get("/text/sentiment", (req,res) => {
             }
         }
     }
-
+    
     const naturalLanguageUnderstanding = getNLUInstance();
-
+    
     naturalLanguageUnderstanding.analyze(analyzeParams)
     .then(analysisResults => {
         //Retrieve the sentiment and return it as a formatted string
@@ -144,6 +155,7 @@ app.get("/text/sentiment", (req,res) => {
         return res.send("Could not do desired operation "+err);
     });
 });
+
 
 let server = app.listen(8080, () => {
     console.log('Listening', server.address().port)
